@@ -1,0 +1,2 @@
+# this is a script that copies the first n images to a directory and creates a csv file of there labels
+# provided that the order of the csv file is the same as the order of the images in the directory
