@@ -18,7 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 from skimage.external import tifffile
 from skimage.measure import compare_mse
-from skimage.metrics import structural_similarity as ssim
+# from skimage.metrics import structural_similarity as ssim
 
 from sklearn.decomposition import PCA, KernelPCA               # 2) PCA
 from sklearn.manifold import TSNE
