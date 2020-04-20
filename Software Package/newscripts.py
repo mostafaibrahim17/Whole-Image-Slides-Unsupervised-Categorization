@@ -91,12 +91,20 @@ def calculateMeanRGB(image):
 def Cluster(n_clusters, D):
     Labels = []
     
-    # kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(D)
+    print(D.shape)
+    HC = AgglomerativeClustering(n_clusters=n_clusters, affinity='manhattan', linkage='complete').fit(D)
+    print('HC Silhouette Score  {} '.format(metrics.silhouette_score(D, HC.labels_)))
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(D)
+    print('kmeans Silhouette Score  {} '.format(metrics.silhouette_score(D, kmeans.labels_)))
 
     gmm = GaussianMixture(n_components=n_clusters, covariance_type='full').fit(D)
-
+    # gmm = GaussianMixture(n_components=n_clusters, covariance_type='tied').fit(D)
     gmmlabels_ = gmm.predict(D)
+    print('gmm Silhouette Score  {} '.format(metrics.silhouette_score(D, gmmlabels_)))
     
+    Labels.append(HC.labels_)
+    Labels.append(kmeans.labels_)
     Labels.append(gmmlabels_)
     return Labels
 

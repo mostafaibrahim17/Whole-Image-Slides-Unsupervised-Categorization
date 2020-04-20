@@ -88,12 +88,32 @@ def calculateMeanRGB(image):
             b_mean += b
     return [r_mean/num_pixels , g_mean/num_pixels , b_mean/num_pixels]
 
-def ClusterAndPlot(n_clusters, D):
+def Cluster(n_clusters, D):
     Labels = []
     
     print(D.shape)
     HC = AgglomerativeClustering(n_clusters=n_clusters, affinity='manhattan', linkage='complete').fit(D)
     print('HC Silhouette Score  {} '.format(metrics.silhouette_score(D, HC.labels_)))
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(D)
+    print('kmeans Silhouette Score  {} '.format(metrics.silhouette_score(D, kmeans.labels_)))
+
+    gmm = GaussianMixture(n_components=n_clusters, covariance_type='full').fit(D)
+    # gmm = GaussianMixture(n_components=n_clusters, covariance_type='tied').fit(D)
+    gmmlabels_ = gmm.predict(D)
+    print('gmm Silhouette Score  {} '.format(metrics.silhouette_score(D, gmmlabels_)))
+    
+    Labels.append(HC.labels_)
+    Labels.append(kmeans.labels_)
+    Labels.append(gmmlabels_)
+    return Labels
+    
+def ClusterAndPlot(n_clusters, D):
+    Labels = []
+    
+    print(D.shape)
+    # HC = AgglomerativeClustering(n_clusters=n_clusters, affinity='manhattan', linkage='complete').fit(D)
+    # print('HC Silhouette Score  {} '.format(metrics.silhouette_score(D, HC.labels_)))
 
     kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(D)
     print('kmeans Silhouette Score  {} '.format(metrics.silhouette_score(D, kmeans.labels_)))
@@ -113,11 +133,11 @@ def ClusterAndPlot(n_clusters, D):
     axs[1, 0].scatter(D[:, 0], D[:, 1], c=kmeans.labels_, cmap='viridis')
     axs[1, 0].set_title('K-Means')
 
-    axs[1, 1].scatter(D[:, 0], D[:, 1], c=HC.labels_, cmap='viridis')
-    axs[1, 1].set_title('HC')
+    # axs[1, 1].scatter(D[:, 0], D[:, 1], c=HC.labels_, cmap='viridis')
+    # axs[1, 1].set_title('HC')
     plt.show()
     
-    Labels.append(HC.labels_)
+    # Labels.append(HC.labels_)
     Labels.append(kmeans.labels_)
     Labels.append(gmmlabels_)
     return Labels
