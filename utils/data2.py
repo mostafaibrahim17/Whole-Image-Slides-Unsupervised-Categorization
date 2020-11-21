@@ -6,7 +6,6 @@ mainDir = "../../Data/regrData/test"
 csvfile = mainDir + "/train_labels.csv"
 df = pd.read_csv(csvfile)
 traindirectory = mainDir
-# print(len(os.listdir(traindirectory)))
 
 for image in os.listdir(traindirectory):
 	if image.endswith('.tif'):
