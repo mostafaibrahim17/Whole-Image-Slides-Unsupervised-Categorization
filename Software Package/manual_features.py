@@ -17,7 +17,7 @@ from skimage.external import tifffile
 
 
 import argparse
-import newscripts as myutils
+import utilities as myutils
 
 parser = argparse.ArgumentParser(description='Categorize this Whole Image Slide Into Tiles')
 parser.add_argument('datapath', help='datapath for 1 WSI')
