@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
 	meanMatrix = np.asarray(new_train)
 
-	autoencoder = load_model('AE_weight.h5') # 6 x 6 x 16
+	autoencoder = load_model('../weights/AE_weight.h5') # 6 x 6 x 16
 	layer_name = 'conv2d_7' # 6 x 6 x 16
 	encoder = Model(inputs=autoencoder.input, outputs=autoencoder.get_layer(layer_name).output)
 

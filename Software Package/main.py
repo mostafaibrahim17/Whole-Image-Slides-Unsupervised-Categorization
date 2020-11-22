@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
 	print(args.option)
 	if (args.option == 1): # manual features
-		subprocess.call(["python3","manual.py", args.datapath, args.n_datatypes, args.magnification_level])
+		subprocess.call(["python3","manual_features.py", args.datapath, args.n_datatypes, args.magnification_level])
 	elif (args.option == 2): # AEs
 		subprocess.call(["python3","AE.py", args.datapath, args.n_datatypes, args.magnification_level])
 
