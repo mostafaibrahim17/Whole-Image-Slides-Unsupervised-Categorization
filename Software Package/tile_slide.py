@@ -14,7 +14,6 @@
 	Be careful:
 	Overload of the node - may have memory issue if node is shared with other jobs.
 '''
-
 from __future__ import print_function
 import json
 import openslide
@@ -36,12 +35,13 @@ import dicom
 from scipy.misc import imsave
 from scipy.misc import imread
 from scipy.misc import imresize
-
+from tqdm import tqdm
 from xml.dom import minidom
 from PIL import Image, ImageDraw
 
 
 VIEWER_SLIDE_NAME = 'slide'
+Image.MAX_IMAGE_PIXELS = 933120000
 
 
 class TileWorker(Process):
@@ -87,10 +87,9 @@ class TileWorker(Process):
                     bw = gray.point(lambda x: 0 if x<220 else 1, '1')
                     # check if the image is mostly background
                     if avgBkg <= (self._Bkg / 100.0):
-                        print("PercentMasked: %.6f, %.6f" % (PercentMasked, self._ROIpc / 100.0) )
+                        # print("PercentMasked: %.6f, %.6f" % (PercentMasked, self._ROIpc / 100.0) )
                         # if an Aperio selection was made, check if is within the selected region
                         if PercentMasked >= (self._ROIpc / 100.0):
-			#if PercentMasked > 0.05:
                             tile.save(outfile, quality=self._quality)
                             if bool(SaveMasks)==True:
                                 height = TileMask.shape[0]
@@ -105,10 +104,6 @@ class TileWorker(Process):
                                 TileMaskO[TileMaskO>=10] = 255
                                 imsave(outfile_bw,TileMaskO) #(outfile_bw, quality=self._quality)
 
-                        #print("%s good: %f" %(outfile, avgBkg))
-                    #elif level>5:
-                    #    tile.save(outfile, quality=self._quality)
-                            #print("%s empty: %f" %(outfile, avgBkg))
                     self._queue.task_done()
                 except:
                     print(level, address)
@@ -176,34 +171,8 @@ class DeepZoomImageTiler(object):
         if len(AbsMismatch) < 1:
           print(self._basename + " - Objective field empty!")
           return
-        '''
-        if(min(AbsMismatch) <= tol):
-            Level = int(AbsMismatch.index(min(AbsMismatch)))
-            Factor = 1
-        else: #pick next highest level, downsample
-            Level = int(max([i for (i, val) in enumerate(Mismatch) if val > 0]))
-            Factor = Magnification / Available[Level]
-        # end added
-        '''
         xml_valid = False
         # a dir was provided for xml files
-
-        '''
-        ImgID = os.path.basename(self._basename)
-        Nbr_of_masks = 0
-        if self._xmlfile != '':
-            xmldir = os.path.join(self._xmlfile, ImgID + '.xml')
-            print("xml:")
-            print(xmldir)
-            if os.path.isfile(xmldir):
-                xml_labels, xml_valid = self.xml_read_labels(xmldir)
-                Nbr_of_masks = len(xml_labels)
-            else:
-                print("No xml file found for slide %s.svs (expected: %s). Directory or xml file does not exist" %  (ImgID, xmldir) )
-                return
-        else:
-            Nbr_of_masks = 1
-        '''
 
         if True:
             #if self._xmlfile != '' && :
@@ -232,7 +201,7 @@ class DeepZoomImageTiler(object):
 
             #return
 
-            for level in range(self._dz.level_count-1,-1,-1):
+            for level in tqdm(range(self._dz.level_count-1,-1,-1)):
                 ThisMag = Available[0]/pow(2,self._dz.level_count-(level+1))
                 if self._Mag > 0:
                     if ThisMag != self._Mag:
@@ -260,20 +229,7 @@ class DeepZoomImageTiler(object):
                     endIndY_current_level_conv.append(self._dz.level_dimensions[level][1])
                     endIndY_current_level_conv.pop(0)
                     '''
-                    #startIndY_current_level_conv = []
-                    #endIndY_current_level_conv = []
-                    #startIndX_current_level_conv = []
-                    #endIndX_current_level_conv = []
-
-                    #for row in range(rows):
-                    #    for col in range(cols):
-                    #        Dlocation, Dlevel, Dsize = self._dz.get_tile_coordinates(level,(col, row))
-                    #        Ddimension = self._dz.get_tile_dimensions(level,(col, row))
-                    #        startIndY_current_level_conv.append(int((Dlocation[1]) / Img_Fact))
-                    #        endIndY_current_level_conv.append(int((Dlocation[1] + Ddimension[1]) / Img_Fact))
-                    #        startIndX_current_level_conv.append(int((Dlocation[0]) / Img_Fact))
-                    #        endIndX_current_level_conv.append(int((Dlocation[0] + Ddimension[0]) / Img_Fact))
-                            # print(Dlocation, Ddimension, int((Dlocation[1]) / Img_Fact), int((Dlocation[1] + Ddimension[1]) / Img_Fact), int((Dlocation[0]) / Img_Fact), int((Dlocation[0] + Ddimension[0]) / Img_Fact))
+              
                 for row in range(rows):
                     for col in range(cols):
                         InsertBaseName = False
@@ -288,18 +244,6 @@ class DeepZoomImageTiler(object):
                           tilename_bw = os.path.join(tiledir, '%d_%d_mask.%s' % (
                                           col, row, self._format))
                         if xml_valid:
-                            # compute percentage of tile in mask
-                            # print(row, col)
-                            # print(startIndX_current_level_conv[col])
-                            # print(endIndX_current_level_conv[col])
-                            # print(startIndY_current_level_conv[row])
-                            # print(endIndY_current_level_conv[row])
-                            # print(mask.shape)
-                            # print(mask[startIndX_current_level_conv[col]:endIndX_current_level_conv[col], startIndY_current_level_conv[row]:endIndY_current_level_conv[row]])
-                            # TileMask = mask[startIndY_current_level_conv[row]:endIndY_current_level_conv[row], startIndX_current_level_conv[col]:endIndX_current_level_conv[col]]
-                            # PercentMasked = mask[startIndY_current_level_conv[row]:endIndY_current_level_conv[row], startIndX_current_level_conv[col]:endIndX_current_level_conv[col]].mean() 
-                            # print(startIndY_current_level_conv[row], endIndY_current_level_conv[row], startIndX_current_level_conv[col], endIndX_current_level_conv[col])
-
                             Dlocation, Dlevel, Dsize = self._dz.get_tile_coordinates(level,(col, row))
                             Ddimension = tuple([pow(2,(self._dz.level_count - 1 - level)) * x for x in self._dz.get_tile_dimensions(level,(col, row))])
                             startIndY_current_level_conv = (int((Dlocation[1]) / Img_Fact))
@@ -702,9 +646,6 @@ if __name__ == '__main__':
 	ImgExtension = slidepath.split('*')[-1]
 	#files
 	#len(files)
-	print(args)
-	print(args[0])
-	print(slidepath)
 	print(files)
 	print("***********************")
 
@@ -821,7 +762,7 @@ if __name__ == '__main__':
 		dz_queue.put( None )
 	'''
 
-	print("End")
+	print("Finished Tiling the slide, you can now find a directory with the tiles and their magnifications")
 
 
 

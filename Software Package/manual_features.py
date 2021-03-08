@@ -14,7 +14,7 @@ from sklearn.preprocessing import StandardScaler
 # Evaluation
 from sklearn import metrics
 from skimage.external import tifffile
-
+from tqdm import tqdm
 
 import argparse
 import utilities as myutils
@@ -30,17 +30,15 @@ args=parser.parse_args()
 if __name__ == '__main__':
 
 	directory = args.datapath.split(".")[0] + "/" + (args.datapath.split(".")[0] + "_files") + "/" + args.magnification_level
-	i = 0
 	mean_List = []
 	image_names = []
 
-	for filename in os.listdir(directory):
+	print("Loading images and extracting features: ")
+	for filename in tqdm(os.listdir(directory)):
 		if (filename.endswith('tif') or filename.endswith('jpeg') or filename.endswith('jpg') or filename.endswith('png')):
-			i+=1
 			image = Image.open(os.path.join(directory, filename))
 			image_names.append(filename)
 			mean_List.append(myutils.calculateMeanHE(image) + myutils.calculateMeanRGB(image))
-			print("loading image " + filename + " number " + str(i))
 
 	meanMatrix = np.asarray(mean_List)
 
@@ -53,9 +51,14 @@ if __name__ == '__main__':
 	gmm = GaussianMixture(n_components=int(args.n_datatypes), covariance_type='full', verbose=1).fit(scaledData)
 
 	gmmlabels_ = gmm.predict(meanMatrix)
-	print(gmmlabels_)
-	
-	myutils.clusterintoDirectories(gmmlabels_, directory, image_names)
+	print("Clustering algorithm found {} classes, although input was {}".format(len(set(gmmlabels_)), args.n_datatypes))
+
+	print("Finished clustering, copying to  sub-directories")
+
+	if (len(set(gmmlabels_)) == 1):
+		print("Only found 1 class, please try the other option")
+	else:
+		myutils.clusterintoDirectories(gmmlabels_, directory, image_names)
 
 	print("Done")
 

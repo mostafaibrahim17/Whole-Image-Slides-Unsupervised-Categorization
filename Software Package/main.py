@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	if(args.datapath): # run tile_sile.py on it
 		subprocess.call(["python3","tile_slide.py", args.datapath])
 
-	print(args.option)
+	print(" Option {}".format(args.option))
 	if (args.option == 1): # manual features
 		subprocess.call(["python3","manual_features.py", args.datapath, args.n_datatypes, args.magnification_level])
 	elif (args.option == 2): # AEs
