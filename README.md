@@ -1,6 +1,7 @@
 # Generalized Categorisation of Digital Pathology Whole Image Slides using Unsupervised Learning
 
 Paper: https://arxiv.org/pdf/2012.13955.pdf
+Article: https://towardsdatascience.com/unsupervised-pathology-whole-slide-image-slides-segmentation-34cd7a50ba6c
 
 Abstract:
 
