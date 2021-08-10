@@ -1,35 +1,7 @@
-import numpy as np
 import os
 import shutil
-
-import math
-from PIL import Image
-import pandas as pd
-
-# Clustering
-from sklearn.cluster import AgglomerativeClustering # 1) Agglomerative-Hierarchical
-from sklearn.cluster import KMeans                  # 2) K-Means
-from sklearn.mixture import GaussianMixture         # 3) Gaussian Mixture Models
-
 from skimage.color import rgb2hed
-from sklearn.preprocessing import StandardScaler
-
-# Evaluation
-from sklearn import metrics
-from skimage.external import tifffile
-from skimage.measure import compare_mse
-# from skimage.metrics import structural_similarity as ssim
-
-from sklearn.decomposition import PCA, KernelPCA               # 2) PCA
-from sklearn.manifold import TSNE
-
-# Load Autoencoder                                  # 3) Autoencoder (Deep dimensionality reduction)
-from keras.models import load_model
-from keras.models import Model
 from tqdm import tqdm
-import cv2
-
-import matplotlib.pyplot as plt 
 
 def calculateMeanHE(image):
     hedImage = rgb2hed(image) # hed is short for Hematox, Eosin, DAB

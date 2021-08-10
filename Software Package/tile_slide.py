@@ -28,21 +28,16 @@ import scipy.misc
 import subprocess
 from glob import glob
 from multiprocessing import Process, JoinableQueue
-import time
 import os
 import sys
 import dicom
-from scipy.misc import imsave
-from scipy.misc import imread
-from scipy.misc import imresize
+from scipy.misc import imsave,imread, imresize
 from tqdm import tqdm
 from xml.dom import minidom
 from PIL import Image, ImageDraw
 
-
 VIEWER_SLIDE_NAME = 'slide'
 Image.MAX_IMAGE_PIXELS = 933120000
-
 
 class TileWorker(Process):
     """A child process that generates and writes tiles."""
@@ -116,7 +111,6 @@ class TileWorker(Process):
         else:
             image = self._slide
         return DeepZoomGenerator(image, self._tile_size, self._overlap, limit_bounds=self._limit_bounds)
-
 
 class DeepZoomImageTiler(object):
     """Handles generation of tiles and metadata for a single image."""
@@ -214,21 +208,6 @@ class DeepZoomImageTiler(object):
                 cols, rows = self._dz.level_tiles[level]
                 if xml_valid:
                     print("xml valid")
-                    '''# If xml file is used, check for each tile what are their corresponding coordinate in the base image
-                    IndX_orig, IndY_orig = self._dz.level_tiles[-1]
-                    CurrentLevel_ReductionFactor = (Img_Fact * float(self._dz.level_dimensions[-1][0]) / float(self._dz.level_dimensions[level][0]))
-                    startIndX_current_level_conv = [int(i * CurrentLevel_ReductionFactor) for i in range(cols)]
-                    print("***********")
-                    endIndX_current_level_conv = [int(i * CurrentLevel_ReductionFactor) for i in range(cols)]
-                    endIndX_current_level_conv.append(self._dz.level_dimensions[level][0])
-                    endIndX_current_level_conv.pop(0)
-    
-                    startIndY_current_level_conv = [int(i * CurrentLevel_ReductionFactor) for i in range(rows)]
-                    #endIndX_current_level_conv = [i * CurrentLevel_ReductionFactor - 1 for i in range(rows)]
-                    endIndY_current_level_conv = [int(i * CurrentLevel_ReductionFactor) for i in range(rows)]
-                    endIndY_current_level_conv.append(self._dz.level_dimensions[level][1])
-                    endIndY_current_level_conv.pop(0)
-                    '''
               
                 for row in range(rows):
                     for col in range(cols):
@@ -319,7 +298,6 @@ class DeepZoomImageTiler(object):
 
 
     def xml_read(self, xmldir, Attribute_Name):
-
         # Original size of the image
         ImgMaxSizeX_orig = float(self._dz.level_dimensions[-1][0])
         ImgMaxSizeY_orig = float(self._dz.level_dimensions[-1][1])
@@ -327,11 +305,6 @@ class DeepZoomImageTiler(object):
         cols, rows = self._dz.level_tiles[-1]
 
         NewFact = max(ImgMaxSizeX_orig, ImgMaxSizeY_orig) / min(max(ImgMaxSizeX_orig, ImgMaxSizeY_orig),15000.0)
-        # Img_Fact = 
-        # read_region(location, level, size)
-        # dz.get_tile_coordinates(14,(0,2))
-        # ((0, 1792), 1, (320, 384))
-
         Img_Fact = float(ImgMaxSizeX_orig) / 5.0 / float(cols)
        
         print("image info:")
@@ -378,8 +351,6 @@ class DeepZoomImageTiler(object):
                             xy[regionID] = []
                             for vertex in vertices:
                                 # get the x value of the vertex / convert them into index in the tiled matrix of the base image
-                                # x = int(round(float(vertex.attributes['X'].value) / ImgMaxSizeX_orig * (cols*Img_Fact)))
-                                # y = int(round(float(vertex.attributes['Y'].value) / ImgMaxSizeY_orig * (rows*Img_Fact)))
                                 x = int(round(float(vertex.attributes['X'].value) / NewFact))
                                 y = int(round(float(vertex.attributes['Y'].value) / NewFact))
                                 xy[regionID].append((x,y))
@@ -389,22 +360,11 @@ class DeepZoomImageTiler(object):
                             xy_neg[regionID] = []
                             for vertex in vertices:
                                 # get the x value of the vertex / convert them into index in the tiled matrix of the base image
-                                # x = int(round(float(vertex.attributes['X'].value) / ImgMaxSizeX_orig * (cols*Img_Fact)))
-                                # y = int(round(float(vertex.attributes['Y'].value) / ImgMaxSizeY_orig * (rows*Img_Fact)))
                                 x = int(round(float(vertex.attributes['X'].value) / NewFact))
                                 y = int(round(float(vertex.attributes['Y'].value) / NewFact))
                                 xy_neg[regionID].append((x,y))
     
 
-                        #xy_a = np.array(xy[regionID])
-
-        #print("xy:")
-        #print(xy)
-        #print("xy_neg:")
-        #print(xy_neg)
-        print("Img_Fact:")
-        print(NewFact)
-        # img = Image.new('L', (int(cols*Img_Fact), int(rows*Img_Fact)), 0)
         img = Image.new('L', (int(ImgMaxSizeX_orig/NewFact), int(ImgMaxSizeY_orig/NewFact)), 0)
         for regionID in xy.keys():
             xy_a = xy[regionID]
@@ -412,14 +372,9 @@ class DeepZoomImageTiler(object):
         for regionID in xy_neg.keys():
             xy_a = xy_neg[regionID]
             ImageDraw.Draw(img,'L').polygon(xy_a, outline=255, fill=0)
-        #img = img.resize((cols,rows), Image.ANTIALIAS)
         mask = np.array(img)
-        #print(mask.shape)
         scipy.misc.toimage(mask).save(os.path.join(os.path.split(self._basename[:-1])[0], "mask_" + os.path.basename(self._basename) + "_" + Attribute_Name + ".jpeg")) 
-        #print(mask)
         return mask / 255.0, xml_valid, NewFact
-        # Img_Fact
-
 
 class DeepZoomStaticTiler(object):
     """Handles generation of tiles and metadata for all images in a slide."""
@@ -429,7 +384,6 @@ class DeepZoomStaticTiler(object):
         if with_viewer:
             # Check extra dependency before doing a bunch of work
             import jinja2
-        #print("line226 - %s " % (slidepath) )
         self._slide = open_slide(slidepath)
         self._basename = basename
         self._basenameJPG = basenameJPG
@@ -479,8 +433,6 @@ class DeepZoomStaticTiler(object):
         tiler.run()
         self._dzi_data[self._url_for(associated)] = tiler.get_dzi()
 
-
-
     def _url_for(self, associated):
         if associated is None:
             base = VIEWER_SLIDE_NAME
@@ -500,9 +452,6 @@ class DeepZoomStaticTiler(object):
             mpp = (float(mpp_x) + float(mpp_y)) / 2
         except (KeyError, ValueError):
             mpp = 0
-        # Embed the dzi metadata in the HTML to work around Chrome's
-        # refusal to allow XmlHttpRequest from file:///, even when
-        # the originating page is also a file:///
         data = template.render(slide_url=self._url_for(None),slide_mpp=mpp,associated=associated_urls, properties=self._slide.properties, dzi_data=json.dumps(self._dzi_data))
         with open(os.path.join(self._basename, 'index.html'), 'w') as fh:
             fh.write(data)
@@ -533,8 +482,6 @@ class DeepZoomStaticTiler(object):
             self._queue.put(None)
         self._queue.join()
 
-
-
 def ImgWorker(queue):
 	print("ImgWorker started")
 	while True:
@@ -564,10 +511,8 @@ def xml_read_labels(xmldir):
         print(xml_labels)
         return xml_labels, xml_valid 
 
-
 if __name__ == '__main__':
 	parser = OptionParser(usage='Usage: %prog [options] <slide>')
-
 	parser.add_option('-L', '--ignore-bounds', dest='limit_bounds',
 		default=True, action='store_false',
 		help='display entire scan area')
@@ -613,13 +558,7 @@ if __name__ == '__main__':
 		type='float', default=-1,
 		help='Magnification at which tiling should be done (-1 of all)')
 
-
-
-
-
 	(opts, args) = parser.parse_args()
-
-
 	try:
 		slidepath = args[0]
 	except IndexError:
@@ -629,49 +568,16 @@ if __name__ == '__main__':
 	if opts.xmlfile is None:
 		opts.xmlfile = ''
 
-        #if ss != '':
-        #    if os.path.isdir(opts.xmlfile):
-            
-
-	# Initialization
-	# imgExample = "/ifs/home/coudrn01/NN/Lung/RawImages/*/*svs"
-	# tile_size = 512
-	# max_number_processes = 10
-	# NbrCPU = 4
-
-
-	# get  images from the data/ file.
 	files = glob(slidepath)  
-	#ImgExtension = os.path.splitext(slidepath)[1]
 	ImgExtension = slidepath.split('*')[-1]
-	#files
-	#len(files)
 	print(files)
 	print("***********************")
-
-	'''
-	dz_queue = JoinableQueue()
-	procs = []
-	print("Nb of processes:")
-	print(opts.max_number_processes)
-	for i in range(opts.max_number_processes):
-		p = Process(target = ImgWorker, args = (dz_queue,))
-		#p.deamon = True
-		p.setDaemon = True
-		p.start()
-		procs.append(p)
-	'''
+	
 	files = sorted(files)
 	for imgNb in range(len(files)):
 		filename = files[imgNb]
-		#print(filename)
 		opts.basenameJPG = os.path.splitext(os.path.basename(filename))[0]
 		print("processing: " + opts.basenameJPG + " with extension: " + ImgExtension)
-		#opts.basenameJPG = os.path.splitext(os.path.basename(slidepath))[0]
-		#if os.path.isdir("%s_files" % (basename)):
-		#	print("EXISTS")
-		#else:
-		#	print("Not Found")
 
 		if ("dcm" in ImgExtension) :
 			print("convert %s dcm to jpg" % filename)
@@ -756,19 +662,5 @@ if __name__ == '__main__':
 				DeepZoomStaticTiler(filename, output, opts.format, opts.tile_size, opts.overlap, opts.limit_bounds, opts.quality, opts.workers, opts.with_viewer, opts.Bkg, opts.basenameJPG, opts.xmlfile, opts.mask_type, opts.ROIpc, '', ImgExtension, opts.SaveMasks, opts.Mag).run()
 			except:
 				print("Failed to process file %s, error: %s" % (filename, sys.exc_info()[0]))
-	'''
-	dz_queue.join()
-	for i in range(opts.max_number_processes):
-		dz_queue.put( None )
-	'''
 
 	print("Finished Tiling the slide, you can now find a directory with the tiles and their magnifications")
-
-
-
-
-
-
-
-
-
